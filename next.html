@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>NEXT — Qu'est-ce que je peux faire, maintenant ?</title>
+<meta name="theme-color" content="#12161C" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;1,500;1,600&family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#12161C; --panel:#1B212B; --panel2:#222938; --line:#2A3140;
+    --signal:#FFC53D; --signal-ink:#3A2B00; --good:#3ED598; --danger:#FF6B57;
+    --text:#EDEBE4; --muted:#8992A3;
+    --font-display:'Fraunces', Georgia, serif;
+    --font-sans:'Space Grotesk', system-ui, sans-serif;
+    --font-mono:'IBM Plex Mono', ui-monospace, monospace;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{height:100%; margin:0;}
+  body{
+    background:var(--ink); color:var(--text); font-family:var(--font-sans);
+    padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  ::selection{background:var(--signal); color:var(--signal-ink);}
+  :focus-visible{outline:2px solid var(--signal); outline-offset:2px;}
+
+  #app-shell{max-width:480px; margin:0 auto; min-height:100dvh; border-left:1px solid var(--line); border-right:1px solid var(--line); position:relative;}
+  .screen{display:none; min-height:100dvh; flex-direction:column; padding:24px 20px 32px;}
+  .screen.active{display:flex;}
+  .center{align-items:center; justify-content:center; text-align:center; gap:24px;}
+
+  h1,h2,h3{font-family:var(--font-display); font-weight:600; margin:0;}
+  .display-xl{font-size:30px; line-height:1.25;}
+  .display-lg{font-size:24px; line-height:1.3;}
+  .display-md{font-size:20px;}
+  .muted{color:var(--muted);}
+  .mono{font-family:var(--font-mono);}
+  p{margin:0;}
+
+  .btn{
+    border:none; border-radius:12px; padding:16px; font-family:var(--font-sans);
+    font-weight:600; font-size:16px; cursor:pointer; text-align:center;
+  }
+  .btn-primary{background:var(--signal); color:var(--signal-ink);}
+  .btn-primary:active{transform:scale(0.98);}
+  .btn-ghost{background:transparent; border:1px solid var(--line); color:var(--text);}
+  .link-row{display:flex; align-items:center; gap:6px; background:none; border:none; color:var(--muted); font-family:var(--font-sans); font-size:14px; cursor:pointer; padding:0;}
+
+  .shutter{
+    width:220px; height:220px; border-radius:999px; background:var(--signal); color:var(--signal-ink);
+    border:none; display:flex; align-items:center; justify-content:center; cursor:pointer;
+    box-shadow:0 0 0 8px rgba(255,197,61,0.12); position:relative;
+  }
+  .shutter:active{transform:scale(0.97);}
+  .shutter::after{content:''; position:absolute; inset:8px; border-radius:999px; border:2px solid rgba(58,43,0,0.15);}
+  .shutter svg{width:40px; height:40px;}
+  .shutter span{display:block; margin-top:8px; font-size:15px; font-weight:600; line-height:1.2;}
+
+  .option-card{
+    display:flex; align-items:center; gap:12px; border:1px solid var(--line); background:var(--panel);
+    border-radius:12px; padding:16px; text-align:left; cursor:pointer; color:var(--text);
+  }
+  .option-card:hover{border-color:rgba(255,197,61,0.5);}
+  .option-card b{display:block; font-weight:500;}
+  .option-card small{display:block; color:var(--muted); font-size:13px;}
+
+  textarea, input[type=text], input[type=password]{
+    width:100%; resize:none; border-radius:10px; border:1px solid var(--line); background:var(--panel);
+    color:var(--text); padding:10px 12px; font-family:var(--font-sans); font-size:14px; outline:none;
+  }
+  textarea:focus, input:focus{border-color:var(--signal);}
+  textarea::placeholder, input::placeholder{color:rgba(137,146,163,0.7);}
+
+  .chip-row{display:flex; flex-wrap:wrap; gap:8px;}
+  .chip{
+    border-radius:999px; border:1px solid var(--line); background:var(--panel); color:var(--text);
+    padding:9px 16px; font-size:14px; font-weight:500; cursor:pointer;
+  }
+  .chip.active{background:var(--signal); border-color:var(--signal); color:var(--signal-ink);}
+
+  .preview-wrap{position:relative; border-radius:12px; overflow:hidden; border:1px solid var(--line);}
+  .preview-wrap img{display:block; width:100%; max-height:260px; object-fit:cover;}
+  .preview-close{
+    position:absolute; top:8px; right:8px; background:rgba(18,22,28,0.7); border:none; color:var(--text);
+    border-radius:999px; width:28px; height:28px; display:flex; align-items:center; justify-content:center; cursor:pointer;
+  }
+
+  .action-row{display:flex; align-items:flex-start; gap:12px; padding:12px 8px 12px 14px; border-left:3px solid var(--signal);}
+  .action-row.done{border-left-color:var(--good);}
+  .action-row .idx{font-family:var(--font-mono); font-size:12px; color:var(--muted);}
+  .action-row .title{font-weight:500;}
+  .action-row.done .title{color:var(--muted); text-decoration:line-through;}
+  .action-row .desc{margin-top:2px; font-size:14px; color:var(--muted);}
+  .action-row .dur{font-family:var(--font-mono); font-size:14px; color:var(--muted); flex-shrink:0;}
+  .check{
+    width:20px; height:20px; border-radius:5px; border:1px solid var(--line); background:transparent;
+    flex-shrink:0; margin-top:2px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--ink);
+  }
+  .check.checked{background:var(--good); border-color:var(--good);}
+  .divider-list > *{border-top:1px solid rgba(42,49,64,0.6);}
+  .divider-list > *:first-child{border-top:none;}
+
+  .spinner{width:40px; height:40px; border-radius:999px; border:2px solid var(--line); border-top-color:var(--signal); animation:spin 0.8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  #screen-guided{position:fixed; inset:0; z-index:50; background:var(--ink); display:none; flex-direction:column; padding:32px 24px; max-width:480px; margin:0 auto; left:50%; transform:translateX(-50%);}
+  #screen-guided.active{display:flex;}
+  .guided-mid{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:28px; text-align:center;}
+  .guided-clock{font-family:var(--font-mono); font-size:56px; color:var(--signal); font-variant-numeric:tabular-nums;}
+  .progress-track{width:100%; max-width:280px; height:8px; border-radius:999px; background:var(--panel); overflow:hidden;}
+  .progress-fill{height:100%; background:var(--signal); border-radius:999px; transition:width 1s linear;}
+  .guided-actions{display:flex; gap:12px;}
+  .guided-actions .btn-ghost{flex:1;}
+  .guided-actions .btn-primary{flex:2;}
+
+  .settings-toggle{position:fixed; top:calc(env(safe-area-inset-top,0px) + 14px); right:calc((100dvw - min(100dvw,480px))/2 + 14px); background:var(--panel); border:1px solid var(--line); color:var(--muted); border-radius:999px; width:34px; height:34px; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:40;}
+  .warning-box{background:rgba(255,107,87,0.1); border:1px solid rgba(255,107,87,0.4); color:var(--text); border-radius:10px; padding:12px; font-size:13px; line-height:1.5;}
+  .field-label{font-size:14px; font-weight:500; color:var(--muted); margin-bottom:6px; display:block;}
+  .history-item + .history-item{margin-top:16px; padding-top:16px; border-top:1px solid rgba(42,49,64,0.6);}
+  .history-item ul{list-style:none; margin:8px 0 0; padding:0; display:flex; flex-direction:column; gap:4px;}
+  .history-item li{font-size:14px;}
+  .history-item li.done{color:var(--muted); text-decoration:line-through;}
+  input[type=file]{display:none;}
+  @media (prefers-reduced-motion: reduce){*{animation-duration:0.001ms !important; transition-duration:0.001ms !important;}}
+</style>
+</head>
+<body>
+<div id="app-shell">
+
+  <button class="settings-toggle" id="btn-settings" title="Reglages IA" aria-label="Reglages IA">⚙</button>
+
+  <!-- HOME -->
+  <section class="screen active center" id="screen-home">
+    <div>
+      <h1 class="display-xl">Qu'est-ce que je peux<br>faire, maintenant ?</h1>
+      <p class="muted" style="margin-top:12px;">Une photo. Un plan. On y va.</p>
+    </div>
+    <button class="shutter" id="btn-shutter">
+      <span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2Z"/><circle cx="12" cy="13" r="4"/></svg>
+        <span>Analyser<br>ma situation</span>
+      </span>
+    </button>
+    <button class="link-row" id="btn-history">🕘 Historique</button>
+  </section>
+
+  <!-- CAPTURE -->
+  <section class="screen" id="screen-capture">
+    <button class="link-row" id="btn-capture-cancel" style="margin-bottom:24px;">✕ Annuler</button>
+
+    <div id="capture-pick" style="display:flex; flex-direction:column; gap:12px; flex:1; justify-content:center;">
+      <h2 class="display-lg" style="margin-bottom:8px;">Montre-moi ta situation</h2>
+      <label class="option-card" for="input-camera">
+        📷 <span><b>Prendre une photo</b><small>Utilise l'appareil photo</small></span>
+      </label>
+      <label class="option-card" for="input-gallery">
+        🖼️ <span><b>Importer une image</b><small>Depuis ta galerie</small></span>
+      </label>
+      <input type="file" id="input-camera" accept="image/*" capture="environment">
+      <input type="file" id="input-gallery" accept="image/*">
+    </div>
+
+    <div id="capture-details" style="display:none; flex-direction:column; gap:18px; flex:1;">
+      <div class="preview-wrap">
+        <img id="preview-img" alt="Photo choisie">
+        <button class="preview-close" id="btn-retake">✕</button>
+      </div>
+
+      <label>
+        <span class="field-label">Un mot sur la situation ? (optionnel)</span>
+        <textarea id="input-description" rows="2" maxlength="500" placeholder="ex. je pars dans 20 min, j'ai la flemme..."></textarea>
+      </label>
+
+      <button class="link-row" id="btn-toggle-checklist" style="justify-content:flex-start;">▾ Comparer a une liste (ex. contenu du sac)</button>
+      <textarea id="input-checklist" rows="2" maxlength="500" placeholder="ex. cles, portefeuille, chargeur, lunettes..." style="display:none;"></textarea>
+
+      <div>
+        <span class="field-label">Combien de temps as-tu ?</span>
+        <div class="chip-row" id="time-chips-capture"></div>
+      </div>
+
+      <div id="demo-category-picker" style="display:none;">
+        <span class="field-label">Mode demo (sans cle IA) — choisis ce que ca ressemble le plus a :</span>
+        <div class="chip-row" id="category-chips"></div>
+      </div>
+
+      <button class="btn btn-primary" id="btn-analyze" style="margin-top:auto;">Analyser</button>
+    </div>
+  </section>
+
+  <!-- LOADING -->
+  <section class="screen center" id="screen-loading">
+    <div class="spinner"></div>
+    <p class="muted">NEXT regarde la photo...</p>
+  </section>
+
+  <!-- ERROR -->
+  <section class="screen center" id="screen-error">
+    <p class="display-md" style="color:var(--danger);">Ca n'a pas fonctionne</p>
+    <p class="muted" id="error-message"></p>
+    <button class="btn btn-primary" id="btn-retry">Reessayer</button>
+  </section>
+
+  <!-- RESULT -->
+  <section class="screen" id="screen-result">
+    <button class="link-row" id="btn-result-cancel" style="margin-bottom:24px;">✕ Nouvelle photo</button>
+    <p style="color:var(--signal); font-weight:500; font-size:14px;">Situation detectee</p>
+    <h1 class="display-lg" id="result-situation" style="margin-top:4px;"></h1>
+    <p class="muted" id="result-summary" style="margin-top:8px;"></p>
+
+    <div style="margin-top:22px;">
+      <span class="field-label">Ajuster le temps disponible</span>
+      <div class="chip-row" id="time-chips-result"></div>
+    </div>
+
+    <div style="display:flex; align-items:baseline; justify-content:space-between; margin-top:22px;">
+      <h2 class="display-md" id="result-plan-title">Actions recommandees</h2>
+      <span class="mono muted" id="result-plan-used"></span>
+    </div>
+
+    <div class="divider-list" id="result-actions" style="margin-top:8px;"></div>
+
+    <button class="btn btn-primary" id="btn-start" style="margin-top:28px;">▶ Commencer</button>
+  </section>
+
+  <!-- DONE -->
+  <section class="screen center" id="screen-done">
+    <p style="font-size:40px;">🎉</p>
+    <h1 class="display-lg">Termine !</h1>
+    <div style="display:flex; gap:32px;">
+      <div><p class="mono display-md" style="color:var(--signal);" id="done-minutes"></p><p class="muted" style="font-size:14px;">minutes utilisees</p></div>
+      <div><p class="mono display-md" style="color:var(--signal);" id="done-count"></p><p class="muted" style="font-size:14px;">actions realisees</p></div>
+    </div>
+    <button class="btn btn-primary" id="btn-restart" style="width:100%; max-width:280px;">Nouvelle analyse</button>
+  </section>
+
+  <!-- HISTORY -->
+  <section class="screen" id="screen-history">
+    <button class="link-row" id="btn-history-back" style="margin-bottom:24px;">← Retour</button>
+    <h1 class="display-lg">Historique</h1>
+    <div id="history-list" style="margin-top:16px;"></div>
+  </section>
+
+  <!-- GUIDED (fullscreen, filled dynamically by JS) -->
+  <section class="screen" id="screen-guided"></section>
+
+  <!-- SETTINGS -->
+  <section class="screen" id="screen-settings">
+    <button class="link-row" id="btn-settings-back" style="margin-bottom:24px;">← Retour</button>
+    <h1 class="display-lg">Reglages IA</h1>
+    <p class="muted" style="margin-top:8px; font-size:14px;">
+      Ce fichier est une page HTML autonome, sans serveur. Sans cle, NEXT tourne
+      en mode demo (plans preecrits). Si tu colles une cle Anthropic ici, l'appel
+      part directement depuis ton navigateur.
+    </p>
+    <div class="warning-box" style="margin-top:14px;">
+      ⚠️ Dans une vraie appli, la cle API ne doit JAMAIS vivre cote navigateur
+      (elle serait visible dans le code source et le reseau). Ceci n'est qu'un
+      mode demo local pour toi seul. Pour une version securisee, cote serveur,
+      voir le projet Next.js fourni a part.
+    </div>
+    <label style="margin-top:18px; display:block;">
+      <span class="field-label">Cle API Anthropic (memoire uniquement, jamais sauvegardee)</span>
+      <input type="password" id="input-api-key" placeholder="sk-ant-...">
+    </label>
+    <button class="btn btn-ghost" id="btn-save-key" style="margin-top:12px;">Utiliser cette cle pour cette session</button>
+    <button class="btn btn-ghost" id="btn-clear-key" style="margin-top:8px;">Revenir au mode demo</button>
+    <p class="mono muted" id="key-status" style="margin-top:14px; font-size:13px;"></p>
+  </section>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------------------------------------------------------------------
+  // State. apiKey lives ONLY in this JS variable: not localStorage, not
+  // sessionStorage, gone on refresh. See screen-settings for the warning.
+  // ---------------------------------------------------------------------
+  var state = {
+    file: null, previewUrl: null, description: "", checklistContext: "",
+    timeBudget: null, demoCategory: null, result: null, planIds: [],
+    guided: null, apiKey: null
+  };
+
+  var TIME_OPTIONS = [
+    {m:5, label:"J'ai 5 min"}, {m:10, label:"J'ai 10 min"}, {m:20, label:"J'ai 20 min"},
+    {m:30, label:"J'ai 30 min"}, {m:60, label:"J'ai 1 heure"}
+  ];
+  var CATEGORIES = ["Chambre","Bureau","Frigo","Sac","Autre"];
+  var CATEGORY_ICON = {Chambre:"🛏️", Bureau:"🗂️", Frigo:"🧊", Sac:"🎒", Autre:"📍"};
+
+  function $(id){ return document.getElementById(id); }
+  function showScreen(id){
+    document.querySelectorAll(".screen").forEach(function(s){ s.classList.remove("active"); });
+    $(id).classList.add("active");
+  }
+
+  // ---------------------------------------------------------------------
+  // Time-budget selection: same greedy safety-net as the Next.js version.
+  // ---------------------------------------------------------------------
+  function selectActionsForBudget(actions, budget){
+    if(!budget) return {selected:actions, used:sumDuration(actions)};
+    var selected = [], remaining = budget;
+    for(var i=0;i<actions.length;i++){
+      if(actions[i].duration <= remaining){ selected.push(actions[i]); remaining -= actions[i].duration; }
+    }
+    if(selected.length===0 && actions.length>0){
+      var shortest = actions.slice().sort(function(a,b){return a.duration-b.duration;})[0];
+      return {selected:[shortest], used:shortest.duration};
+    }
+    return {selected:selected, used:sumDuration(selected)};
+  }
+  function sumDuration(actions){
+    return Math.round(actions.reduce(function(s,a){return s+a.duration;},0)*10)/10;
+  }
+
+  // ---------------------------------------------------------------------
+  // Validation: mirrors the Zod schema from the server version. Nothing
+  // from the model (or from the canned demo data) reaches the UI without
+  // passing through here first.
+  // ---------------------------------------------------------------------
+  function validateAnalysis(obj){
+    try{
+      if(!obj || typeof obj !== "object") return {ok:false,error:"reponse vide"};
+      if(typeof obj.situation !== "string" || !obj.situation.trim() || obj.situation.length>120) return {ok:false,error:"situation invalide"};
+      if(typeof obj.summary !== "string" || !obj.summary.trim() || obj.summary.length>500) return {ok:false,error:"summary invalide"};
+      if(CATEGORIES.indexOf(obj.category) === -1) return {ok:false,error:"category invalide"};
+      if(!Array.isArray(obj.actions) || obj.actions.length<1 || obj.actions.length>10) return {ok:false,error:"actions invalides"};
+      var actions = [];
+      for(var i=0;i<obj.actions.length;i++){
+        var a = obj.actions[i];
+        if(typeof a.title !== "string" || !a.title.trim() || a.title.length>80) return {ok:false,error:"titre d'action invalide"};
+        if(typeof a.description !== "string" || !a.description.trim() || a.description.length>300) return {ok:false,error:"description d'action invalide"};
+        var dur = Number(a.duration);
+        if(!isFinite(dur) || dur<=0 || dur>120) return {ok:false,error:"duree d'action invalide"};
+        actions.push({id: (Date.now()+"-"+i), title:a.title.trim(), description:a.description.trim(), duration:dur});
+      }
+      return {ok:true, data:{
+        situation: obj.situation.trim(), summary: obj.summary.trim(), category: obj.category,
+        actions: actions, totalDuration: sumDuration(actions)
+      }};
+    }catch(e){ return {ok:false, error:"exception de validation"}; }
+  }
+
+  function extractJson(raw){
+    var fenced = raw.match(/```(?:json)?\s*([\s\S]*?)```/i);
+    var candidate = fenced ? fenced[1] : raw;
+    var start = candidate.indexOf("{"), end = candidate.lastIndexOf("}");
+    if(start===-1 || end===-1 || end<start) return null;
+    return candidate.slice(start, end+1);
+  }
+
+  // ---------------------------------------------------------------------
+  // Live AI call (only if the user pasted a key in Reglages). Talks
+  // directly to the Anthropic API from the browser - see the warning in
+  // screen-settings for why that's a demo-only choice, never a production
+  // one.
+  // ---------------------------------------------------------------------
+  function callAnthropic(base64, mediaType, prompt){
+    return fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-api-key": state.apiKey,
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true"
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-5-20250929",
+        max_tokens: 1200,
+        system: "Tu es le moteur d'analyse de l'application NEXT. Tu regardes une photo d'une situation reelle et tu produis un plan d'action concret. Tu reponds UNIQUEMENT avec un objet JSON valide, sans texte avant ou apres, sans balises markdown.",
+        messages: [{ role:"user", content: [
+          { type:"image", source:{ type:"base64", media_type: mediaType, data: base64 } },
+          { type:"text", text: prompt }
+        ]}]
+      })
+    }).then(function(res){
+      if(!res.ok){ return res.text().then(function(t){ throw new Error("API "+res.status+": "+t.slice(0,200)); }); }
+      return res.json();
+    }).then(function(data){
+      var text = (data.content||[]).filter(function(b){return b.type==="text";}).map(function(b){return b.text;}).join("\n");
+      if(!text) throw new Error("Reponse du modele vide.");
+      return text;
+    });
+  }
+
+  function buildPrompt(){
+    var lines = [];
+    lines.push("Analyse cette photo et propose un plan d'action concret, realiste et immediatement actionnable pour la situation visible.");
+    if(state.description) lines.push('Description donnee par l\'utilisateur : "'+state.description+'".');
+    if(state.checklistContext) lines.push('Liste de reference fournie par l\'utilisateur : "'+state.checklistContext+'". Compare ce qui est visible a cette liste et signale ce qui manque.');
+    if(state.timeBudget) lines.push("L'utilisateur dispose d'environ "+state.timeBudget+" minutes. Ne propose que des actions qui tiennent dans ce temps, ordonnees par priorite decroissante.");
+    else lines.push("Aucune contrainte de temps : propose entre 3 et 6 actions prioritaires.");
+    lines.push('Reponds avec EXACTEMENT ce format JSON, rien d\'autre : {"situation":"...", "summary":"...", "category":"Chambre|Bureau|Frigo|Sac|Autre", "actions":[{"title":"...","description":"...","duration":3}], "totalDuration":5}');
+    return lines.join("\n\n");
+  }
+
+  function analyzeWithAI(){
+    var reader = new FileReader();
+    return new Promise(function(resolve,reject){
+      reader.onload = function(){
+        var base64 = reader.result.split(",")[1];
+        callAnthropic(base64, state.file.type, buildPrompt())
+          .then(function(raw){
+            var jsonText = extractJson(raw);
+            var parsed = null;
+            try{ parsed = jsonText ? JSON.parse(jsonText) : null; }catch(e){}
+            var result = validateAnalysis(parsed);
+            if(!result.ok){ reject(new Error("Reponse IA invalide: "+result.error)); return; }
+            resolve(result.data);
+          })
+          .catch(reject);
+      };
+      reader.onerror = function(){ reject(new Error("Lecture de l'image impossible.")); };
+      reader.readAsDataURL(state.file);
+    });
+  }
+
+  // ---------------------------------------------------------------------
+  // Demo mode: no key required. Canned plans per category, adapted to the
+  // chosen time budget with the same selection logic as a live plan.
+  // ---------------------------------------------------------------------
+  var DEMO_TEMPLATES = {
+    Chambre: { summary:"Des vetements et quelques objets trainent au sol et sur le lit.", actions:[
+      {title:"Ramasser les vetements", description:"Rassemble-les au meme endroit, sans les trier tout de suite.", duration:3},
+      {title:"Faire le lit", description:"Tire la couette et remets les oreillers en place.", duration:2},
+      {title:"Vider les verres/assiettes", description:"Rapporte-les a la cuisine.", duration:2},
+      {title:"Ranger le bureau visible", description:"Regroupe les papiers epars en une seule pile.", duration:4},
+      {title:"Passer un coup d'aspirateur rapide", description:"Juste les zones de passage.", duration:5},
+      {title:"Aerer la piece", description:"Ouvre la fenetre quelques minutes.", duration:1}
+    ]},
+    Bureau: { summary:"Plusieurs objets et papiers sont disperses sur le plan de travail.", actions:[
+      {title:"Jeter les dechets visibles", description:"Emballages, gobelets, papiers inutiles.", duration:2},
+      {title:"Regrouper les papiers", description:"Une seule pile, meme en vrac pour l'instant.", duration:3},
+      {title:"Ranger les cables", description:"Rassemble-les avec un lien ou un elastique.", duration:3},
+      {title:"Degager la surface de travail", description:"Ne garde que ce dont tu te sers aujourd'hui.", duration:4},
+      {title:"Nettoyer l'ecran/le clavier", description:"Un coup de chiffon rapide.", duration:2}
+    ]},
+    Frigo: { summary:"Quelques ingredients simples semblent disponibles pour un repas rapide.", actions:[
+      {title:"Verifier les dates courtes", description:"Repere ce qui doit etre consomme en priorite.", duration:2},
+      {title:"Preparer une salade composee", description:"Avec ce qui est deja coupe ou pret a l'emploi.", duration:8},
+      {title:"Sortir un plat simple a rechauffer", description:"Idéal si tu manques de temps.", duration:3},
+      {title:"Jeter ce qui est perime", description:"Fais un tri rapide avant de refermer.", duration:3},
+      {title:"Noter ce qui manque", description:"Pour la prochaine liste de courses.", duration:1}
+    ]},
+    Sac: { summary:"Quelques essentiels semblent visibles, d'autres pourraient manquer.", actions:[
+      {title:"Verifier cles et portefeuille", description:"Les deux objets les plus faciles a oublier.", duration:1},
+      {title:"Ajouter le chargeur", description:"S'il n'est pas deja dans le sac.", duration:1},
+      {title:"Verifier le niveau de batterie", description:"Du telephone et des ecouteurs.", duration:1},
+      {title:"Ajouter une bouteille d'eau", description:"Si tu pars pour la journee.", duration:1},
+      {title:"Verifier les documents necessaires", description:"Badge, carte, billets selon ta sortie.", duration:2}
+    ]},
+    Autre: { summary:"Une situation a traiter, avec quelques verifications simples possibles.", actions:[
+      {title:"Observer l'element de plus pres", description:"Cherche un signe visible de probleme (fissure, tache, bruit).", duration:3},
+      {title:"Verifier les branchements/fixations", description:"Assure-toi que rien n'est desserre ou debranche.", duration:3},
+      {title:"Prendre une photo de reference", description:"Utile si le probleme evolue.", duration:1},
+      {title:"Noter ce que tu observes", description:"Pour en parler a quelqu'un si besoin.", duration:2}
+    ]}
+  };
+
+  function analyzeWithDemo(){
+    var cat = state.demoCategory || "Autre";
+    var tmpl = DEMO_TEMPLATES[cat];
+    var actions = tmpl.actions.map(function(a,i){ return {id:(Date.now()+"-"+i), title:a.title, description:a.description, duration:a.duration}; });
+    return Promise.resolve({
+      situation: cat + " a traiter",
+      summary: tmpl.summary + " (mode demo, sans IA)",
+      category: cat,
+      actions: actions,
+      totalDuration: sumDuration(actions)
+    });
+  }
+
+  // ---------------------------------------------------------------------
+  // History (localStorage)
+  // ---------------------------------------------------------------------
+  var HISTORY_KEY = "next.history.v1";
+  function loadHistory(){
+    try{ var raw = localStorage.getItem(HISTORY_KEY); var arr = raw ? JSON.parse(raw) : []; return Array.isArray(arr)?arr:[]; }
+    catch(e){ return []; }
+  }
+  function saveHistoryEntry(entry){
+    var current = loadHistory();
+    var next = [entry].concat(current).slice(0,100);
+    try{ localStorage.setItem(HISTORY_KEY, JSON.stringify(next)); }catch(e){}
+  }
+
+  // ---------------------------------------------------------------------
+  // Rendering helpers
+  // ---------------------------------------------------------------------
+  function renderTimeChips(container, onPick, current){
+    container.innerHTML = "";
+    TIME_OPTIONS.forEach(function(opt){
+      var chip = document.createElement("button");
+      chip.className = "chip" + (current===opt.m ? " active" : "");
+      chip.textContent = opt.label;
+      chip.onclick = function(){ onPick(current===opt.m ? null : opt.m); };
+      container.appendChild(chip);
+    });
+  }
+
+  function formatDuration(min){
+    if(min<1) return Math.round(min*60)+"s";
+    return (min%1===0?min:min.toFixed(1))+" min";
+  }
+
+  function renderActionRow(action, index, done, onToggle){
+    var row = document.createElement("div");
+    row.className = "action-row" + (done ? " done" : "");
+    var check = document.createElement("button");
+    check.className = "check" + (done?" checked":"");
+    check.innerHTML = done ? "✓" : "";
+    check.onclick = onToggle;
+    var mid = document.createElement("div");
+    mid.style.flex = "1";
+    mid.innerHTML = '<p class="idx">'+String(index+1).padStart(2,"0")+'</p><p class="title">'+escapeHtml(action.title)+'</p><p class="desc">'+escapeHtml(action.description)+'</p>';
+    var dur = document.createElement("span");
+    dur.className = "dur"; dur.textContent = formatDuration(action.duration);
+    row.appendChild(check); row.appendChild(mid); row.appendChild(dur);
+    return row;
+  }
+
+  function escapeHtml(s){
+    var div = document.createElement("div"); div.textContent = s; return div.innerHTML;
+  }
+
+  // ---------------------------------------------------------------------
+  // Capture screen wiring
+  // ---------------------------------------------------------------------
+  var resultChecked = {};
+
+  function resetCapture(){
+    state.file=null; state.previewUrl=null; state.description=""; state.checklistContext="";
+    state.timeBudget=null; state.demoCategory=null;
+    $("capture-pick").style.display="flex"; $("capture-details").style.display="none";
+    $("input-description").value=""; $("input-checklist").value=""; $("input-checklist").style.display="none";
+    $("input-camera").value=""; $("input-gallery").value="";
+  }
+
+  function handleFile(file){
+    if(!file) return;
+    state.file = file;
+    state.previewUrl = URL.createObjectURL(file);
+    $("preview-img").src = state.previewUrl;
+    $("capture-pick").style.display="none"; $("capture-details").style.display="flex";
+    renderTimeChips($("time-chips-capture"), onPickCaptureTime, state.timeBudget);
+    updateDemoPicker();
+  }
+
+  function onPickCaptureTime(m){
+    state.timeBudget = m;
+    renderTimeChips($("time-chips-capture"), onPickCaptureTime, state.timeBudget);
+  }
+
+  function updateDemoPicker(){
+    var showDemo = !state.apiKey;
+    $("demo-category-picker").style.display = showDemo ? "block" : "none";
+    if(showDemo){
+      var box = $("category-chips"); box.innerHTML="";
+      CATEGORIES.forEach(function(cat){
+        var chip = document.createElement("button");
+        chip.className = "chip" + (state.demoCategory===cat ? " active":"");
+        chip.textContent = CATEGORY_ICON[cat]+" "+cat;
+        chip.onclick = function(){ state.demoCategory=cat; updateDemoPicker(); };
+        box.appendChild(chip);
+      });
+    }
+  }
+
+  $("input-camera").addEventListener("change", function(e){ handleFile(e.target.files[0]); });
+  $("input-gallery").addEventListener("change", function(e){ handleFile(e.target.files[0]); });
+  $("btn-retake").addEventListener("click", function(){ resetCapture(); });
+  $("btn-capture-cancel").addEventListener("click", function(){ resetCapture(); showScreen("screen-home"); });
+  $("btn-toggle-checklist").addEventListener("click", function(){
+    var box = $("input-checklist");
+    box.style.display = box.style.display==="none" ? "block" : "none";
+  });
+
+  $("btn-shutter").addEventListener("click", function(){ resetCapture(); showScreen("screen-capture"); });
+  $("btn-history").addEventListener("click", function(){ renderHistory(); showScreen("screen-history"); });
+  $("btn-history-back").addEventListener("click", function(){ showScreen("screen-home"); });
+  $("btn-result-cancel").addEventListener("click", function(){ resetCapture(); showScreen("screen-capture"); });
+
+  $("btn-analyze").addEventListener("click", function(){
+    state.description = $("input-description").value.trim();
+    state.checklistContext = $("input-checklist").value.trim();
+    if(!state.file){ return; }
+    if(!state.apiKey && !state.demoCategory) state.demoCategory = "Autre";
+
+    showScreen("screen-loading");
+    var task = state.apiKey ? analyzeWithAI() : analyzeWithDemo();
+    task.then(function(result){
+      state.result = result;
+      renderResult();
+      showScreen("screen-result");
+    }).catch(function(err){
+      $("error-message").textContent = err.message || "Erreur inconnue.";
+      showScreen("screen-error");
+    });
+  });
+
+  $("btn-retry").addEventListener("click", function(){ showScreen("screen-capture"); });
+
+  // ---------------------------------------------------------------------
+  // Result screen
+  // ---------------------------------------------------------------------
+  function renderResult(){
+    resultChecked = {};
+    $("result-situation").textContent = state.result.situation;
+    $("result-summary").textContent = state.result.summary;
+    renderTimeChips($("time-chips-result"), onPickResultTime, state.timeBudget);
+    renderResultPlan();
+  }
+
+  function onPickResultTime(m){
+    state.timeBudget = m;
+    renderResultPlan();
+    renderTimeChips($("time-chips-result"), onPickResultTime, state.timeBudget);
+  }
+
+  function renderResultPlan(){
+    var sel = selectActionsForBudget(state.result.actions, state.timeBudget);
+    $("result-plan-title").textContent = state.timeBudget ? ("Ton plan — "+state.timeBudget+" min") : "Actions recommandees";
+    $("result-plan-used").textContent = state.timeBudget ? (sel.used+" / "+state.timeBudget+" min") : "";
+    var list = $("result-actions"); list.innerHTML="";
+    sel.selected.forEach(function(action, i){
+      list.appendChild(renderActionRow(action, i, !!resultChecked[action.id], function(){
+        resultChecked[action.id] = !resultChecked[action.id];
+        renderResultPlan();
+      }));
+    });
+    state._planIds = sel.selected.map(function(a){return a.id;});
+  }
+
+  $("btn-start").addEventListener("click", function(){
+    var planActions = state.result.actions.filter(function(a){ return state._planIds.indexOf(a.id) !== -1; });
+    startGuided(planActions);
+  });
+
+  // ---------------------------------------------------------------------
+  // Guided mode
+  // ---------------------------------------------------------------------
+  function startGuided(actions){
+    state.guided = { actions:actions, index:0, completed:[], skipped:[], startedAt:Date.now(), secondsLeft:0, timerId:null };
+    showScreen("screen-guided");
+    setupGuidedStep();
+  }
+
+  function setupGuidedStep(){
+    var g = state.guided, action = g.actions[g.index];
+    g.secondsLeft = Math.round(action.duration*60);
+    var total = Math.max(1, g.secondsLeft);
+    renderGuided(action, g.index, g.actions.length, g.secondsLeft, total);
+    clearInterval(g.timerId);
+    g.timerId = setInterval(function(){
+      g.secondsLeft -= 1;
+      if(g.secondsLeft <= 0){ clearInterval(g.timerId); advanceGuided("completed"); return; }
+      renderGuidedTick(g.secondsLeft, total);
+    }, 1000);
+  }
+
+  function renderGuided(action, idx, count, secondsLeft, total){
+    var s = $("screen-guided");
+    s.innerHTML =
+      '<p class="mono muted">'+(idx+1)+' / '+count+'</p>'+
+      '<div class="guided-mid">'+
+        '<h1 class="display-lg">'+escapeHtml(action.title)+'</h1>'+
+        (action.description ? '<p class="muted" style="max-width:260px;">'+escapeHtml(action.description)+'</p>' : '')+
+        '<p class="guided-clock" id="guided-clock">'+formatClock(secondsLeft)+'</p>'+
+        '<div class="progress-track"><div class="progress-fill" id="guided-progress" style="width:'+((1-secondsLeft/total)*100)+'%"></div></div>'+
+      '</div>'+
+      '<div class="guided-actions">'+
+        '<button class="btn btn-ghost" id="btn-skip">Passer</button>'+
+        '<button class="btn btn-primary" id="btn-done">Termine</button>'+
+      '</div>';
+    $("btn-skip").onclick = function(){ clearInterval(state.guided.timerId); advanceGuided("skipped"); };
+    $("btn-done").onclick = function(){ clearInterval(state.guided.timerId); advanceGuided("completed"); };
+  }
+
+  function renderGuidedTick(secondsLeft, total){
+    var clock = $("guided-clock"), fill = $("guided-progress");
+    if(clock) clock.textContent = formatClock(secondsLeft);
+    if(fill) fill.style.width = ((1-secondsLeft/total)*100)+"%";
+  }
+
+  function formatClock(totalSeconds){
+    var s = Math.max(0,totalSeconds), m = Math.floor(s/60), r = s%60;
+    return m+":"+String(r).padStart(2,"0");
+  }
+
+  function advanceGuided(status){
+    var g = state.guided, action = g.actions[g.index];
+    if(status==="completed") g.completed.push(action.id); else g.skipped.push(action.id);
+    if(g.index+1 < g.actions.length){ g.index += 1; setupGuidedStep(); }
+    else{ finishGuided(); }
+  }
+
+  function finishGuided(){
+    var g = state.guided;
+    var timeUsedSeconds = Math.round((Date.now()-g.startedAt)/1000);
+    saveHistoryEntry({
+      id: String(Date.now()), date: new Date().toISOString(), category: state.result.category,
+      situation: state.result.situation, summary: state.result.summary, actions: state.result.actions,
+      completedActionIds: g.completed, skippedActionIds: g.skipped, timeBudget: state.timeBudget,
+      timeUsed: Math.round(timeUsedSeconds/60)
+    });
+    $("done-minutes").textContent = timeUsedSeconds<60 ? "<1" : Math.round(timeUsedSeconds/60);
+    $("done-count").textContent = g.completed.length+"/"+(g.completed.length+g.skipped.length);
+    showScreen("screen-done");
+  }
+
+  $("btn-restart").addEventListener("click", function(){ resetCapture(); showScreen("screen-home"); });
+
+  // ---------------------------------------------------------------------
+  // History screen
+  // ---------------------------------------------------------------------
+  function renderHistory(){
+    var entries = loadHistory();
+    var box = $("history-list");
+    if(entries.length===0){
+      box.innerHTML = '<div style="margin-top:40px; text-align:center;" class="muted"><p>Aucune analyse pour l\'instant.</p><p style="font-size:14px;">Tes situations passees apparaitront ici.</p></div>';
+      return;
+    }
+    box.innerHTML = "";
+    entries.forEach(function(entry){
+      var item = document.createElement("div"); item.className="history-item";
+      var d = new Date(entry.date);
+      var dateStr = d.toLocaleDateString("fr-FR", {day:"numeric", month:"short", year:"numeric"});
+      var actionsHtml = entry.actions.map(function(a){
+        var done = entry.completedActionIds.indexOf(a.id)!==-1;
+        return '<li class="'+(done?"done":"")+'">'+(done?"✓":"·")+" "+escapeHtml(a.title)+"</li>";
+      }).join("");
+      item.innerHTML =
+        '<div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">'+
+          '<div><p class="muted" style="font-size:14px;">'+CATEGORY_ICON[entry.category]+" "+entry.category+" · "+dateStr+'</p>'+
+          '<p class="display-md">'+escapeHtml(entry.situation)+'</p></div>'+
+          '<span class="mono muted" style="font-size:14px;">'+entry.completedActionIds.length+"/"+entry.actions.length+'</span>'+
+        '</div>'+
+        '<ul>'+actionsHtml+'</ul>';
+      box.appendChild(item);
+    });
+  }
+
+  // ---------------------------------------------------------------------
+  // Settings (in-memory API key)
+  // ---------------------------------------------------------------------
+  $("btn-settings").addEventListener("click", function(){
+    $("key-status").textContent = state.apiKey ? "Mode IA reelle actif pour cette session." : "Mode demo actif (aucune cle en memoire).";
+    showScreen("screen-settings");
+  });
+  $("btn-settings-back").addEventListener("click", function(){ showScreen("screen-home"); });
+  $("btn-save-key").addEventListener("click", function(){
+    var v = $("input-api-key").value.trim();
+    state.apiKey = v || null;
+    $("key-status").textContent = state.apiKey ? "Mode IA reelle actif pour cette session." : "Mode demo actif (aucune cle en memoire).";
+  });
+  $("btn-clear-key").addEventListener("click", function(){
+    state.apiKey = null; $("input-api-key").value="";
+    $("key-status").textContent = "Mode demo actif (aucune cle en memoire).";
+  });
+
+})();
+</script>
+</body>
+</html>
